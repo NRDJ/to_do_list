@@ -1,5 +1,25 @@
 $(window).on("load", function () {
 
+  var addTasksToDom = function (allTasksArr) {
+      allTasksArr.forEach((element, i) => {
+        var newCol = $(`
+        <div class="col-1"></div>
+        <div class="col-9">
+          <div class="form-check d-inline-block">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+            <label class="form-check-label" for="flexCheckDefault">
+            </label>
+          </div>
+          <p class='d-inline-block'>${allTasksArr[i].content}</p>
+        </div>
+        <div class="col-2">
+          <button type="button" class="btn btn-danger btn-sm">X</button>
+        </div>`);
+        
+        $(newCol).appendTo(`.row`);
+      });
+  }
+
 
   var importTasks = function () {
     $.ajax({
@@ -12,6 +32,7 @@ $(window).on("load", function () {
       success: function (response, textStatus) {
         var allTasksArr = response.tasks;
         console.log(allTasksArr);
+        addTasksToDom(allTasksArr);
       },
 
       error: function (request, textStatus, errorMessage) {
