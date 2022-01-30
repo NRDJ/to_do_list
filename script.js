@@ -26,12 +26,10 @@ $(window).on("load", function () {
       <div class="row no-gutters">
         <div class="col-1"></div>
         <div class="col-9">
-          <div class="form-check d-inline-block">
-            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
-            <label class="form-check-label" for="flexCheckDefault">
-            </label>
+          <div class="d-inline-block">
+            <input type="checkbox">
           </div>
-          <p class='d-inline-block'>${taskContent}</p>
+          <p class='d-inline-block' id='task'>${taskContent}</p>
         </div>
         <div class="col-2">
           <button type="button" class="btn btn-danger btn-sm btn-remove">X</button>
@@ -118,10 +116,23 @@ $(window).on("load", function () {
     removeFromDom(clickedBtn);
   };
 
+  $(document).on("change", "input", function (event) {
+    var paragraph = $(this).parent().parent().find('p')
+
+    if (this.checked) {
+      paragraph.css('text-decoration', 'line-through');
+      paragraph.css('color', '#d9d9d9');
+    } else {
+      paragraph.css('text-decoration', 'none');
+      paragraph.css('color', 'black');
+    }
+
+  });
+
   $(document).on("click", ".btn-remove", function (event) {
     removeTask($(this));
   });
-  
+
   $(".btn-add").click(function () {
     addTask();
   });
