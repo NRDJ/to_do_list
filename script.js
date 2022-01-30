@@ -1,7 +1,27 @@
 $(window).on("load", function () {
   var deleteTask = false;
 
-  var addTaskToDom = function (task) {
+  var deleteTaskFromApi = function (contentVal, taskID, allTasksArr, i) {
+    if (contentVal === allTasksArr[i].content) {
+      taskID = allTasksArr[i].id;
+
+      $.ajax({
+        type: "DELETE",
+
+        url: `https://altcademy-to-do-list-api.herokuapp.com/tasks/${taskID}?api_key=224`,
+
+        success: function (response, textStatus) {
+          console.log(response);
+        },
+
+        error: function (request, textStatus, errorMessage) {
+          console.log(errorMessage);
+        },
+      });
+    }
+  }
+
+  var addTaskContentToDom = function (taskContent) {
     var newCol = $(`
       <div class="row no-gutters">
         <div class="col-1"></div>
@@ -11,7 +31,7 @@ $(window).on("load", function () {
             <label class="form-check-label" for="flexCheckDefault">
             </label>
           </div>
-          <p class='d-inline-block'>${task}</p>
+          <p class='d-inline-block'>${taskContent}</p>
         </div>
         <div class="col-2">
           <button type="button" class="btn btn-danger btn-sm btn-remove">X</button>
@@ -21,42 +41,27 @@ $(window).on("load", function () {
     $(newCol).appendTo(`.container`);
   };
 
-  var importTasks = function (contentVal) {
+  var getAllTasksFromApi = function (contentVal) {
     var taskID;
 
     $.ajax({
       type: "GET",
 
-      url: "https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=1",
+      url: "https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=224",
 
       dataType: "json",
 
       success: function (response, textStatus) {
         console.log("success");
+
         var allTasksArr = response.tasks;
 
         allTasksArr.forEach((element, i) => {
-          var task = allTasksArr[i].content;
+          var taskContent = allTasksArr[i].content;
           if (!deleteTask) {
-            addTaskToDom(task);
+            addTaskContentToDom(taskContent);
           } else {
-            if (contentVal === allTasksArr[i].content) {
-              taskID = allTasksArr[i].id;
-
-              $.ajax({
-                type: "DELETE",
-
-                url: `https://altcademy-to-do-list-api.herokuapp.com/tasks/${taskID}?api_key=1`,
-
-                success: function (response, textStatus) {
-                  console.log(response);
-                },
-
-                error: function (request, textStatus, errorMessage) {
-                  console.log(errorMessage);
-                },
-              });
-            }
+            deleteTaskFromApi(contentVal, taskID, allTasksArr, i)
           }
         });
       },
@@ -67,12 +72,10 @@ $(window).on("load", function () {
     });
   };
 
-  //api key 224//
-
-  var sendTaskToApi = function (newTask) {
+  var postTaskToApi = function (newTask) {
     $.ajax({
       type: "POST",
-      url: "https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=1",
+      url: "https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=224",
       contentType: "application/json",
       dataType: "json",
       data: JSON.stringify({
@@ -91,10 +94,11 @@ $(window).on("load", function () {
 
   var addTask = function () {
     var newTask = document.querySelector("input").value;
+    document.querySelector("input").value = '';
 
     if (newTask) {
-      sendTaskToApi(newTask);
-      addTaskToDom(newTask);
+      postTaskToApi(newTask);
+      addTaskContentToDom(newTask);
     }
   };
 
@@ -103,7 +107,7 @@ $(window).on("load", function () {
       var contentVal = clickedBtn.parent().parent().find("p").text();
 
       deleteTask = true;
-      importTasks(contentVal);
+      getAllTasksFromApi(contentVal);
     };
 
     var removeFromDom = function (clickedBtn) {
@@ -114,13 +118,13 @@ $(window).on("load", function () {
     removeFromDom(clickedBtn);
   };
 
+  $(document).on("click", ".btn-remove", function (event) {
+    removeTask($(this));
+  });
+  
   $(".btn-add").click(function () {
     addTask();
   });
 
-  $(document).on("click", ".btn-remove", function (event) {
-    removeTask($(this));
-  });
-
-  importTasks();
+  getAllTasksFromApi();
 });
