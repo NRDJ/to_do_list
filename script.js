@@ -43,9 +43,11 @@ $(window).on("load", function () {
   }
 
   var setTaskCompleted = function(taskID) {
+
     $.ajax({
       type: 'PUT',
-      url: `https://altcademy-to-do-list-api.herokuapp.com/tasks/${id}?api_key=224`,
+      url: `https://altcademy-to-do-list-api.herokuapp.com//tasks/${taskID}/mark_complete?api_key=224`,
+      
       contentType: 'application/json',
       dataType: 'json',
       data: JSON.stringify({
