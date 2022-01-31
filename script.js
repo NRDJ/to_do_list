@@ -1,23 +1,10 @@
 $(window).on("load", function () {
-  var deleteTask = false;
+  var allTasks = {};
 
-  var deleteTaskFromApi = function (contentVal, taskID, allTasksArr, i) {
-    if (contentVal === allTasksArr[i].content) {
-      taskID = allTasksArr[i].id;
-
-      $.ajax({
-        type: "DELETE",
-
-        url: `https://altcademy-to-do-list-api.herokuapp.com/tasks/${taskID}?api_key=224`,
-
-        success: function (response, textStatus) {
-          console.log(response);
-        },
-
-        error: function (request, textStatus, errorMessage) {
-          console.log(errorMessage);
-        },
-      });
+  var getTaskId = function (element, paragraphText) {
+    if (paragraphText === element.content) {
+      var taskID = element.id;
+      return taskID;
     }
   }
 
@@ -39,9 +26,43 @@ $(window).on("load", function () {
     $(newCol).appendTo(`.container`);
   };
 
-  var getAllTasksFromApi = function (contentVal) {
-    var taskID;
+  var deleteTaskFromApi = function (taskID) {
+    $.ajax({
+      type: "DELETE",
 
+      url: `https://altcademy-to-do-list-api.herokuapp.com/tasks/${taskID}?api_key=224`,
+
+      success: function (response, textStatus) {
+        console.log(response);
+      },
+
+      error: function (request, textStatus, errorMessage) {
+        console.log(errorMessage);
+      },
+    });
+  }
+
+  var setTaskCompleted = function(taskID) {
+    $.ajax({
+      type: 'PUT',
+      url: `https://altcademy-to-do-list-api.herokuapp.com/tasks/${id}?api_key=224`,
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify({
+        task: {
+          completed: true
+        }
+      }),
+      success: function (response, textStatus) {
+        console.log(response);
+      },
+      error: function (request, textStatus, errorMessage) {
+        console.log(errorMessage);
+      }
+    });
+  }
+
+  var getAllTasksFromApi = function (action, paragraphText) {
     $.ajax({
       type: "GET",
 
@@ -51,38 +72,32 @@ $(window).on("load", function () {
 
       success: function (response, textStatus) {
         console.log("success");
+        console.log(response);
 
         var allTasksArr = response.tasks;
 
         allTasksArr.forEach((element, i) => {
-          var taskContent = allTasksArr[i].content;
-          if (!deleteTask) {
-            addTaskContentToDom(taskContent);
-          } else {
-            deleteTaskFromApi(contentVal, taskID, allTasksArr, i)
+          var taskID = getTaskId(element, paragraphText);
+          switch (action) {
+            case 'add':
+              var taskContent = allTasksArr[i].content;
+              addTaskContentToDom(taskContent);
+              break;
+            case 'delete':
+              if (taskID) {
+                deleteTaskFromApi(taskID)
+              }
+              break;
+            case 'edit':
+              if (taskID) {
+                setTaskCompleted(taskID);
+              }
+              break;
+            default:
+              console.log('error!');
+              break;
           }
         });
-      },
-
-      error: function (request, textStatus, errorMessage) {
-        console.log(errorMessage);
-      },
-    });
-  };
-
-  var postTaskToApi = function (newTask) {
-    $.ajax({
-      type: "POST",
-      url: "https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=224",
-      contentType: "application/json",
-      dataType: "json",
-      data: JSON.stringify({
-        task: {
-          content: newTask,
-        },
-      }),
-      success: function (response, textStatus) {
-        console.log(response);
       },
       error: function (request, textStatus, errorMessage) {
         console.log(errorMessage);
@@ -94,6 +109,27 @@ $(window).on("load", function () {
     var newTask = document.querySelector("input").value;
     document.querySelector("input").value = '';
 
+    var postTaskToApi = function (newTask) {
+      $.ajax({
+        type: "POST",
+        url: "https://altcademy-to-do-list-api.herokuapp.com/tasks?api_key=224",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify({
+          task: {
+            content: newTask,
+          },
+        }),
+        success: function (response, textStatus) {
+          console.log(response);
+  
+        },
+        error: function (request, textStatus, errorMessage) {
+          console.log(errorMessage);
+        },
+      });
+    };
+
     if (newTask) {
       postTaskToApi(newTask);
       addTaskContentToDom(newTask);
@@ -102,10 +138,9 @@ $(window).on("load", function () {
 
   var removeTask = function (clickedBtn) {
     var removeFromApi = function (clickedBtn) {
-      var contentVal = clickedBtn.parent().parent().find("p").text();
+      var paragraphText = clickedBtn.parent().parent().find("p").text();
 
-      deleteTask = true;
-      getAllTasksFromApi(contentVal);
+      getAllTasksFromApi('delete', paragraphText);
     };
 
     var removeFromDom = function (clickedBtn) {
@@ -116,17 +151,20 @@ $(window).on("load", function () {
     removeFromDom(clickedBtn);
   };
 
+  var editParagraph = function (paragraph, textDecoration, color) {
+    paragraph.css({'text-decoration': textDecoration, 'color': color});
+  }
+
   $(document).on("change", "input", function (event) {
     var paragraph = $(this).parent().parent().find('p')
+    var paragraphText = $(this).parent().parent().find('p').text();
 
     if (this.checked) {
-      paragraph.css('text-decoration', 'line-through');
-      paragraph.css('color', '#d9d9d9');
+      editParagraph(paragraph, 'line-through', '#d9d9d9')   
+      getAllTasksFromApi('edit', paragraphText);
     } else {
-      paragraph.css('text-decoration', 'none');
-      paragraph.css('color', 'black');
+      editParagraph(paragraph, 'none', 'black')
     }
-
   });
 
   $(document).on("click", ".btn-remove", function (event) {
@@ -137,5 +175,5 @@ $(window).on("load", function () {
     addTask();
   });
 
-  getAllTasksFromApi();
+  getAllTasksFromApi('add');
 });
