@@ -191,5 +191,11 @@ $(window).on("load", function () {
     addTask();
   });
 
+  $("input").on('keyup', function (e) {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      addTask();
+    }
+  });
+
   getAllTasksFromApi('add');
 });
