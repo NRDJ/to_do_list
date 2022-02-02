@@ -1,22 +1,23 @@
 $(window).on("load", function () {
-  var allTasks = {};
 
-  var getTaskId = function (element, paragraphText) {
-    if (paragraphText === element.content) {
-      var taskID = element.id;
+  var getTaskId = function (task, paragraphText) {
+    if (paragraphText === task.content) {
+      var taskID = task.id;
       return taskID;
     }
   }
 
-  var addTaskContentToDom = function (taskContent) {
+  var addTaskContentToDom = function (taskContent, taskID, isCompleted) {
     var newCol = $(`
       <div class="row no-gutters">
         <div class="col-1"></div>
         <div class="col-9">
           <div class="d-inline-block">
-            <input type="checkbox">
+            <label for="accept">
+              <input type="checkbox" id="accept" name="accept" value="yes">
+            </label>
           </div>
-          <p class='d-inline-block' id='task'>${taskContent}</p>
+          <p class='d-inline-block' id='${taskID}'>${taskContent}</p>
         </div>
         <div class="col-2">
           <button type="button" class="btn btn-danger btn-sm btn-remove">X</button>
@@ -24,6 +25,12 @@ $(window).on("load", function () {
       </div>`);
 
     $(newCol).appendTo(`.container`);
+    if (isCompleted) {
+      var checkBox = $(`#${taskID}`).prev().find('input');
+      var paragraph = $(`#${taskID}`);
+      editParagraph(paragraph, 'line-through', '#d9d9d9');
+      $(checkBox).prop('checked', true);
+    }
   };
 
   var deleteTaskFromApi = function (taskID) {
@@ -42,7 +49,7 @@ $(window).on("load", function () {
     });
   }
 
-  var setTaskCompleted = function(taskID) {
+  var setTaskCompleted = function(taskID, isCompleted) {
 
     $.ajax({
       type: 'PUT',
@@ -52,7 +59,7 @@ $(window).on("load", function () {
       dataType: 'json',
       data: JSON.stringify({
         task: {
-          completed: true
+          completed: isCompleted
         }
       }),
       success: function (response, textStatus) {
@@ -64,7 +71,7 @@ $(window).on("load", function () {
     });
   }
 
-  var getAllTasksFromApi = function (action, paragraphText) {
+  var getAllTasksFromApi = function (action, paragraphText, isCompleted) {
     $.ajax({
       type: "GET",
 
@@ -78,12 +85,14 @@ $(window).on("load", function () {
 
         var allTasksArr = response.tasks;
 
-        allTasksArr.forEach((element, i) => {
-          var taskID = getTaskId(element, paragraphText);
+        allTasksArr.forEach((task, i) => {
+          var taskID = getTaskId(task, paragraphText);
           switch (action) {
             case 'add':
-              var taskContent = allTasksArr[i].content;
-              addTaskContentToDom(taskContent);
+              taskID = task.id;
+              var taskContent = task.content;
+              var isCompleted = task.completed;
+              addTaskContentToDom(taskContent, taskID, isCompleted);
               break;
             case 'delete':
               if (taskID) {
@@ -92,7 +101,7 @@ $(window).on("load", function () {
               break;
             case 'edit':
               if (taskID) {
-                setTaskCompleted(taskID);
+                setTaskCompleted(taskID, isCompleted);
               }
               break;
             default:
@@ -158,14 +167,16 @@ $(window).on("load", function () {
   }
 
   $(document).on("change", "input", function (event) {
-    var paragraph = $(this).parent().parent().find('p')
-    var paragraphText = $(this).parent().parent().find('p').text();
+    var paragraph = $(this).parent().parent().next();
+    var paragraphText = paragraph.text();
 
     if (this.checked) {
       editParagraph(paragraph, 'line-through', '#d9d9d9')   
-      getAllTasksFromApi('edit', paragraphText);
+      getAllTasksFromApi('edit', paragraphText, true);
     } else {
-      editParagraph(paragraph, 'none', 'black')
+      editParagraph(paragraph, 'none', 'black');
+      getAllTasksFromApi('edit', paragraphText, false);
+
     }
   });
 
