@@ -51,10 +51,11 @@ $(window).on("load", function () {
 
   var setTaskCompleted = function(taskID, isCompleted) {
 
-    $.ajax({
+    var mark = (isCompleted) ? 'mark_complete' : 'mark_active';
+
+    $.ajax({      
       type: 'PUT',
-      url: `https://altcademy-to-do-list-api.herokuapp.com//tasks/${taskID}/mark_complete?api_key=224`,
-      
+      url: `https://altcademy-to-do-list-api.herokuapp.com//tasks/${taskID}/${mark}?api_key=224`,
       contentType: 'application/json',
       dataType: 'json',
       data: JSON.stringify({
@@ -91,7 +92,7 @@ $(window).on("load", function () {
             case 'add':
               taskID = task.id;
               var taskContent = task.content;
-              var isCompleted = task.completed;
+              isCompleted = task.completed;
               addTaskContentToDom(taskContent, taskID, isCompleted);
               break;
             case 'delete':
@@ -166,17 +167,19 @@ $(window).on("load", function () {
     paragraph.css({'text-decoration': textDecoration, 'color': color});
   }
 
-  $(document).on("change", "input", function (event) {
+  $(document).on("change", "input", function (event) {  
+    console.log('change input activated');
     var paragraph = $(this).parent().parent().next();
     var paragraphText = paragraph.text();
 
     if (this.checked) {
+      console.log('checked');
       editParagraph(paragraph, 'line-through', '#d9d9d9')   
       getAllTasksFromApi('edit', paragraphText, true);
     } else {
+      console.log('not checked');
       editParagraph(paragraph, 'none', 'black');
       getAllTasksFromApi('edit', paragraphText, false);
-
     }
   });
 
