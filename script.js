@@ -168,16 +168,13 @@ $(window).on("load", function () {
   }
 
   $(document).on("change", "input", function (event) {  
-    console.log('change input activated');
     var paragraph = $(this).parent().parent().next();
     var paragraphText = paragraph.text();
 
     if (this.checked) {
-      console.log('checked');
       editParagraph(paragraph, 'line-through', '#d9d9d9')   
       getAllTasksFromApi('edit', paragraphText, true);
     } else {
-      console.log('not checked');
       editParagraph(paragraph, 'none', 'black');
       getAllTasksFromApi('edit', paragraphText, false);
     }
